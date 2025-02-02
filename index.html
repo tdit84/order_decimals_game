@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Decimals Game</title>
+  <!-- Include SortableJS library for mobile-friendly drag and drop -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -33,7 +35,8 @@
       background-color: #e0f7fa;
       border: 1px solid #00838f;
       border-radius: 4px;
-      cursor: move;
+      cursor: grab;
+      user-select: none;
     }
     #checkButton {
       padding: 10px 20px;
@@ -83,43 +86,18 @@
       numbers.forEach((num, index) => {
         const div = document.createElement("div");
         div.className = "draggable";
-        div.draggable = true;
         div.textContent = num;
         div.dataset.index = index;
-        // Add event listeners for drag and drop
-        div.addEventListener("dragstart", dragStart);
-        div.addEventListener("dragover", dragOver);
-        div.addEventListener("drop", drop);
         numberContainer.appendChild(div);
       });
     }
 
-    let dragged;
-
-    function dragStart(e) {
-      dragged = this;
-      e.dataTransfer.effectAllowed = "move";
-    }
-
-    function dragOver(e) {
-      e.preventDefault();
-      return false;
-    }
-
-    function drop(e) {
-      e.stopPropagation();
-      if (dragged !== this) {
-        // Swap the dragged element with the drop target by reordering in the container
-        let nodes = Array.from(numberContainer.children);
-        let draggedIndex = nodes.indexOf(dragged);
-        let droppedIndex = nodes.indexOf(this);
-        if (draggedIndex < droppedIndex) {
-          numberContainer.insertBefore(dragged, this.nextSibling);
-        } else {
-          numberContainer.insertBefore(dragged, this);
-        }
-      }
-      return false;
+    // Initialize SortableJS to enable drag-and-drop on both mobile and desktop
+    function initializeSortable() {
+      Sortable.create(numberContainer, {
+        animation: 150,
+        ghostClass: 'sortable-ghost'
+      });
     }
 
     // Check if the current order of numbers is from smallest to largest
@@ -149,6 +127,7 @@
       generateNumbers();
       shuffleArray(numbers);
       renderNumbers();
+      initializeSortable();
       resultDiv.textContent = "";
     }
 
