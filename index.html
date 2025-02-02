@@ -65,6 +65,7 @@
   <script>
     let numbers = [];
     let starCount = 0;
+    let sortableInstance = null; // will hold our SortableJS instance
     const numberContainer = document.getElementById("numberContainer");
     const resultDiv = document.getElementById("result");
     const starCounterSpan = document.getElementById("starCounter");
@@ -112,17 +113,21 @@
       });
     }
 
-    // Initialize SortableJS to enable drag-and-drop on both mobile and desktop.
+    // Initialize (or reinitialize) SortableJS to enable drag-and-drop.
     function initializeSortable() {
-      Sortable.create(numberContainer, {
+      // If an instance already exists, destroy it so dragging works on new elements.
+      if (sortableInstance) {
+        sortableInstance.destroy();
+      }
+      sortableInstance = Sortable.create(numberContainer, {
         animation: 150,
         ghostClass: 'sortable-ghost'
       });
     }
 
     // Check if the current order of numbers is from smallest to largest.
-    // If correct, increase star count, update display, and generate a new question.
-    // If incorrect, display a message and stay on the same question.
+    // If correct: add a star, update display, then generate a new question.
+    // If incorrect: subtract a star (min 0) and remain on the same question.
     function checkOrder() {
       const currentOrder = Array.from(numberContainer.children).map(div => parseFloat(div.textContent));
       const sortedOrder = [...currentOrder].sort((a, b) => a - b);
@@ -138,9 +143,16 @@
         updateStarCounter();
         resultDiv.textContent = "Correct! Great job!";
         resultDiv.style.color = "green";
+        // After success, disable dragging on current elements
+        if (sortableInstance) {
+          sortableInstance.option("disabled", true);
+        }
         // Generate a new question after a short delay.
         setTimeout(initGame, 1000);
       } else {
+        // Subtract a star, ensuring we don't go below 0.
+        starCount = Math.max(0, starCount - 1);
+        updateStarCounter();
         resultDiv.textContent = "Incorrect order. Try again!";
         resultDiv.style.color = "red";
       }
