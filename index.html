@@ -15,11 +15,16 @@
       background-color: #f9f9f9;
     }
     h1 {
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
     #instructions {
       font-size: 20px;
+      margin-bottom: 10px;
+    }
+    #starCounter {
+      font-size: 20px;
       margin-bottom: 20px;
+      display: block;
     }
     #numberContainer {
       display: inline-block;
@@ -51,6 +56,7 @@
 </head>
 <body>
   <h1>Order Decimals Game</h1>
+  <span id="starCounter">⭐ 0</span>
   <div id="instructions">Drag and drop the numbers to arrange them from smallest to largest.</div>
   <div id="numberContainer"></div>
   <button id="checkButton">Check Order</button>
@@ -58,21 +64,36 @@
 
   <script>
     let numbers = [];
+    let starCount = 0;
     const numberContainer = document.getElementById("numberContainer");
     const resultDiv = document.getElementById("result");
+    const starCounterSpan = document.getElementById("starCounter");
 
-    // Generate random decimal numbers (including both negative and positive)
+    // Update the star display.
+    function updateStarCounter() {
+      starCounterSpan.textContent = "⭐ " + starCount;
+    }
+
+    // Generate random decimal numbers.
+    // For starCount < 3: generate numbers between -10 and 10 with exactly 2 decimals.
+    // For starCount >= 3: generate numbers between -100 and 100 with 2 to 4 decimals.
     function generateNumbers() {
       numbers = [];
-      const count = 6; // total numbers to generate
+      const count = 6;
       for (let i = 0; i < count; i++) {
-        // Generate a number between -10 and 10 with 2 decimal places
-        let num = (Math.random() * 20 - 10).toFixed(2);
+        let num;
+        if (starCount < 3) {
+          num = (Math.random() * 20 - 10).toFixed(2);
+        } else {
+          let range = Math.random() * 200 - 100;
+          let decimals = Math.floor(Math.random() * 3) + 2; // 2 to 4 decimals
+          num = range.toFixed(decimals);
+        }
         numbers.push(parseFloat(num));
       }
     }
 
-    // Shuffle the numbers array
+    // Shuffle the numbers array.
     function shuffleArray(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -80,19 +101,18 @@
       }
     }
 
-    // Render the numbers as draggable items
+    // Render the numbers as draggable items.
     function renderNumbers() {
       numberContainer.innerHTML = "";
-      numbers.forEach((num, index) => {
+      numbers.forEach((num) => {
         const div = document.createElement("div");
         div.className = "draggable";
         div.textContent = num;
-        div.dataset.index = index;
         numberContainer.appendChild(div);
       });
     }
 
-    // Initialize SortableJS to enable drag-and-drop on both mobile and desktop
+    // Initialize SortableJS to enable drag-and-drop on both mobile and desktop.
     function initializeSortable() {
       Sortable.create(numberContainer, {
         animation: 150,
@@ -100,7 +120,9 @@
       });
     }
 
-    // Check if the current order of numbers is from smallest to largest
+    // Check if the current order of numbers is from smallest to largest.
+    // If correct, increase star count, update display, and generate a new question.
+    // If incorrect, display a message and stay on the same question.
     function checkOrder() {
       const currentOrder = Array.from(numberContainer.children).map(div => parseFloat(div.textContent));
       const sortedOrder = [...currentOrder].sort((a, b) => a - b);
@@ -112,8 +134,12 @@
         }
       }
       if (correct) {
+        starCount++;
+        updateStarCounter();
         resultDiv.textContent = "Correct! Great job!";
         resultDiv.style.color = "green";
+        // Generate a new question after a short delay.
+        setTimeout(initGame, 1000);
       } else {
         resultDiv.textContent = "Incorrect order. Try again!";
         resultDiv.style.color = "red";
@@ -122,7 +148,7 @@
 
     document.getElementById("checkButton").addEventListener("click", checkOrder);
 
-    // Initialize the game
+    // Initialize the game.
     function initGame() {
       generateNumbers();
       shuffleArray(numbers);
@@ -131,7 +157,10 @@
       resultDiv.textContent = "";
     }
 
-    window.onload = initGame;
+    window.onload = function() {
+      updateStarCounter();
+      initGame();
+    };
   </script>
 </body>
 </html>
